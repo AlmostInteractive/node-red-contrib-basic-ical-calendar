@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-basic-ical-calendar",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "NodeRed iCal calender trigger and sensor",
   "author": {
     "name": "AlmostInteractive",
