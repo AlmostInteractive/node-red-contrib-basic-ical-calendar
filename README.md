@@ -10,6 +10,7 @@ Configuration node.  It can automatically refresh itself periodically and in the
 ### calendar/cal-sensor
 On trigger, outputs true if the calendar is currently in an event, otherwise false.  Only outputs on trigger.  Output format:
 `{ inEvent: boolean }`
+If the triggering `payload` includes `forceCalendarUpdate: true` then the calendar will be re-fetched before querying.
 
 ### calendar/cal-trigger
 Sends to Output 1 when an event starts.  Sends to Output 2 when an event ends.  Cannot be triggered manually (use the sensor for manual queries). Output format:
