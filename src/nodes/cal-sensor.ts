@@ -1,5 +1,5 @@
 import { NodeMessage, NodeMessageInFlow, NodeStatusShape } from 'node-red';
-import { CalSensorNode, CalNodeConfig, getNextCheckTimeString, inTheFuture, inThePast } from './node-common';
+import { CalSensorNode, CalNodeConfig, inTheFuture, inThePast } from './node-common';
 import { CalConfigNode } from './cal-config';
 
 module.exports = function (RED: any) {

@@ -1,4 +1,3 @@
-import { NodeMessage } from 'node-red';
 import {
   CalTriggerNode,
   CalNodeConfig,
