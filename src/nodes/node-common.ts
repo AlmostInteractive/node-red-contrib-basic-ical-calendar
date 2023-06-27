@@ -1,11 +1,5 @@
-import { CalConfigNodeConfig, OnUpdateHandler } from './cal-config';
-import { CronJob } from 'cron';
-import * as NodeCache from 'node-cache';
-import { IKalenderEvent, KalenderEvents } from 'kalender-events';
-import { DateTime } from 'luxon';
+import { OnUpdateHandler } from './cal-config';
 import { Node, NodeDef } from 'node-red';
-import moment = require('moment');
-
 
 export type Countdown = { days: number, hours: number, minutes: number, seconds: number };
 
