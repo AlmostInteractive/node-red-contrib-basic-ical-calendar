@@ -16,7 +16,7 @@ Sends to Output 1 when an event starts.  Sends to Output 2 when an event ends.  
 `{ inEvent: boolean }`
 
 ## Debugging
-See [DEBUGGING.md](DEBUGGING.md)
+See [debugging.md](docs/debugging.md)
 
 ## Credits
 Almost everything you find here was shamelessly stolen from Benjamin Neumann (@naimo84) and his repo here: https://github.com/naimo84/node-red-contrib-ical-events.  I stand on the shoulders of giants.  Thank you, Benjamin.
