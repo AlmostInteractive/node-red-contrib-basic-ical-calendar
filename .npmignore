@@ -1,11 +1,9 @@
-.git
 .github
 .idea
 .vscode
 src/*
 docs/*
 resources/*
-node_modules/*
 *.js.map
 *.tgz
 .env
