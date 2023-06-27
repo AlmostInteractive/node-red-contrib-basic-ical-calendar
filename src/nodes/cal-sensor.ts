@@ -50,7 +50,7 @@ module.exports = function (RED: any) {
     };
 
     const payload = msg.payload as any;
-    if (payload && ('updateConfig' in payload) && payload.updateConfig) {
+    if (payload && (typeof payload === 'object') && payload.hasOwnProperty('updateConfig') && payload.updateConfig) {
       shape = 'dot';
       calConfigNode.updateCalendar().then(calculateStatus);
     } else {
