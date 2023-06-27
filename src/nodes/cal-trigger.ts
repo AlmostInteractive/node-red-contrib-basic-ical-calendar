@@ -87,7 +87,7 @@ module.exports = function (RED: any) {
     };
 
     // it's a hack using `every` to run until false
-    calConfigNode.events.every(event => {
+    const didSchedule = !calConfigNode.events.every(event => {
       const start = ke.countdown(event.eventStart);
       const end = ke.countdown(event.eventEnd);
 
@@ -110,6 +110,10 @@ module.exports = function (RED: any) {
 
       return true;
     });
+
+    if (!didSchedule) {
+      node.status({ fill: 'blue', shape: 'ring', text: `No events found` });
+    }
   };
 
   RED.nodes.registerType('cal-trigger', calTriggerNode);
