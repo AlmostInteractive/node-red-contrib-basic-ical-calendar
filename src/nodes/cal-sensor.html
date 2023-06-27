@@ -1,0 +1,24 @@
+<script type="text/javascript">
+  //<<calNodeDefaultConfig>>
+  RED.nodes.registerType('cal-sensor', {
+    category: 'calendar',
+    defaults: calNodeDefaults,
+    inputs: 1,
+    outputs: 1,
+    outputLabels: ['output on trigger and detected event threshold'],
+    color: '#5cb1de',
+    label: function () {
+      return this.name || this.confignode.name || 'sensor';
+    },
+    icon: 'font-awesome/fa-calendar-check-o',
+    paletteLabel: 'sensor',
+    oneditprepare: function () {
+      //<<prepareCalEvents>>
+    }
+  });
+
+</script>
+
+<script type="text/html" id="calSensor-template" data-template-name="cal-sensor">
+    <!-- calNodeTemplate.html -->
+</script>

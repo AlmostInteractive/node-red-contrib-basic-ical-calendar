@@ -1,0 +1,114 @@
+<script type="text/javascript">
+  RED.nodes.registerType('cal-config', {
+    category: 'config',
+    defaults: {
+      name: {
+        value: '',
+      },
+      url: {
+        value: '',
+      },
+      refresh: {
+        value: 1,
+      },
+      refreshUnits: {
+        value: 'days',
+      },
+      usecache: {
+        value: true,
+      },
+    },
+    paletteLabel: 'config',
+    label: function () {
+      return this.name || 'Calendar Config';
+    },
+    oneditprepare: function () {},
+    oneditsave: function() {
+      const num = parseInt($("#node-config-input-refresh").val().toString());
+      if (isNaN(num) || num <= 1) {
+        $("#node-config-input-refresh").val(1);
+      }
+    },
+  });
+</script>
+
+<script type="text/html" data-template-name="cal-config">
+    <style>
+        .event {
+            display: flex;
+        }
+
+        .event .red-ui-typedInput-container {
+            flex: 1
+        }
+
+        .event span {
+            flex: 1
+        }
+
+        .event label {
+            min-width: 110px;
+            align-self: center;
+        }
+
+        .padding-top {
+            padding-top: 10px;
+        }
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+
+    <div class="form-row event">
+        <label for="node-config-input-name" style="width:160px !important">
+            <i class="fa tag"></i>
+            <span>Name:</span>
+        </label>
+        <input type="text" id="node-config-input-name" placeholder="" style="width:280px !important">
+    </div>
+
+    <hr/>
+
+    <h3>Calendar Access</h3>
+    <div class="form-row event">
+        <label for="node-config-input-url" style="min-width:160px !important">
+            <i class="fa fa-link"></i>
+            <span>Calendar URL or filepath (ical, ics, caldav):</span>
+        </label>
+        <input type="text" id="node-config-input-url" placeholder="" style="width:100% !important">
+    </div>
+
+    <hr/>
+
+    <h3>Data Refresh</h3>
+    <div class="form-row event" id="timeout-refresh-details">
+        <label for="node-config-input-refresh">
+            <i class="fa fa-clock-o"></i>
+            <span>Refresh file every:</span>
+        </label>
+        <input type="number" id="node-config-input-refresh" style="text-align:end; width:50px !important" placeholder="0">
+        <select id="node-config-input-refreshUnits" style="width:200px !important">
+            <option value="seconds">Seconds</option>
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+            <option value="days">Days</option>
+        </select>
+    </div>
+    <div class="form-row event">
+        <label for="node-config-input-usecache" style="width:160px !important">
+            <i class="fa fa-asterisk"></i>
+            <span>Use cache in case of an error:</span>
+        </label>
+        <input type="checkbox" id="node-config-input-usecache" placeholder="" style="width:16px !important">
+    </div>
+</script>
+

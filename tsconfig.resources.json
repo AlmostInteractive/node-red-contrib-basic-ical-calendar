@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "*": ["types/*"] },
+    "outDir": "./resources",
+    "target": "es5",
+    "moduleResolution": "node"
+  },
+  "include": [
+    "./src/resources/**/*"
+  ]
+}
