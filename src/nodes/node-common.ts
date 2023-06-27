@@ -47,7 +47,7 @@ export const inThePast = (countdown: Countdown) => {
   if (countdown.minutes > 0)
     return false;
 
-  return (countdown.seconds <= 0);
+  return (countdown.seconds < 0);
 };
 
 export const inTheFuture = (countdown: Countdown) => {
@@ -66,32 +66,5 @@ export const inTheFuture = (countdown: Countdown) => {
   if (countdown.minutes > 0)
     return true;
 
-  return (countdown.seconds >= 0);
-};
-
-export const getNextCheckTimeString = (node: CalTriggerNode) => {
-  const seconds = Math.floor((node._nextCheckTime.getTime() - new Date().getTime()) / 1000);
-  if (seconds < 0)
-    return '';
-
-  const d = Math.floor(seconds / (3600 * 24));
-  const h = Math.floor(seconds % (3600 * 24) / 3600);
-  const m = Math.floor(seconds % 3600 / 60);
-  const s = Math.floor(seconds % 60);
-
-  let timeStr = '';
-  if (d > 0) {
-    timeStr += `${d}d `;
-  }
-  if (h > 0) {
-    timeStr += `${h}h `;
-  }
-  if (m > 0) {
-    timeStr += `${m}m `;
-  }
-  if (s > 0) {
-    timeStr += `${s}s`;
-  }
-
-  return timeStr.trim();
+  return (countdown.seconds > 0);
 };
