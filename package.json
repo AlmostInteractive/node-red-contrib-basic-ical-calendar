@@ -45,7 +45,8 @@
     "release": "release-it",
     "release-beta": "release-it -- --ci --increment=prerelease --preReleaseId=beta --github.preRelease",
     "dev": "gulp develop",
-    "build": "gulp"
+    "build": "gulp",
+    "package": "npm pack"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
