@@ -1,5 +1,5 @@
 
-### Setup
+## Setup
 First of all, we have to install Node-RED locally as a global package
 
 ```npm i -g node-red```
@@ -8,7 +8,7 @@ run node-red once and shutdown it after a few seconds, in order to generate a .n
 
 ```node-red```
 
-### Create launch.json
+## Create launch.json
 If using VScode, create a launch.json under ~/.node-red/.vscode (but with your correct `outFiles` value):
 
 ```
@@ -28,7 +28,7 @@ If using VScode, create a launch.json under ~/.node-red/.vscode (but with your c
 }
 ```
 
-### Install package
+## Install package
 
 Now clone node-red-contrib-basic-ical-calendar and install the dependencies.
 
@@ -37,6 +37,10 @@ cd $HOME
 git clone https://github.com/AlmostInteractive/node-red-contrib-basic-ical-calendar.git
 npm i
 ```
+
+Create a `.env` file in the `node-red-contrib-basic-ical-calendar` folder and set `NODE_RED_JS_PATH` to the location of your $HOME/.node-red/node_modules/red.js file.  (See `.env.example` for an example.)
+
+## Install package locally
 
 Connect node-red-contrib-basic-ical-calendar via npm install to the $HOME/.node-red folder
 
@@ -73,7 +77,6 @@ cd $HOME/.node-red/node_modules/node-red-contrib-basic-ical-calendar
 npm run dev
 ```
 
-Attach to node-red under VS Code's "Run and Debug"
+Attach to node-red under VScode's "Run and Debug"
 
-Now open http://localhost:1880
-(opens new window) and add a node, trigger it and happy debugging ;) 
+Now open http://localhost:1880 and add a node, trigger it and happy debugging.
