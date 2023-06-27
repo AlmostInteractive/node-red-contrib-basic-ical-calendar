@@ -37,7 +37,8 @@
     "version": ">=1.0.0",
     "nodes": {
       "cal-config": "dist/cal-config.js",
-      "cal-sensor": "dist/cal-sensor.js"
+      "cal-sensor": "dist/cal-sensor.js",
+      "cal-trigger": "dist/cal-trigger.js"
     }
   },
   "repository": {
