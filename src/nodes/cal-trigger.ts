@@ -121,7 +121,8 @@ module.exports = function (RED: any) {
 
 
 const getNextCheckTimeString = (node: CalTriggerNode) => {
-  const dateString = node._nextCheckTime.toLocaleDateString();
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+  const dateString = node._nextCheckTime.toLocaleDateString(undefined, options);
 
   const seconds = Math.floor((node._nextCheckTime.getTime() - new Date().getTime()) / 1000);
   const d = Math.floor(seconds / (3600 * 24));
