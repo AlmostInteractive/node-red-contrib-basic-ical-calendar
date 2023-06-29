@@ -5,23 +5,19 @@ import * as NodeCache from 'node-cache';
 type Countdown = { days: number, hours: number, minutes: number, seconds: number };
 
 export interface CalConfigNodeConfig extends Config {
-  name: string,
-  caldav?: string,
-  refresh?: string,
-  refreshUnits?: 'seconds' | 'minutes' | 'hours' | 'days'
+  name: string;
+  caldav?: string;
+  refresh?: number;
+  refreshUnits?: 'seconds' | 'minutes' | 'hours' | 'days';
 }
 
 export interface OnUpdateHandler {
-  onCalNodeConfigUpdate: () => void,
+  onCalNodeConfigUpdate: () => void;
 }
 
 export interface CalConfigNode extends Node {
   calConfigNodeConfig: CalConfigNodeConfig;
-  url: string;
-  usecache: boolean;
   cache?: NodeCache;
-  refresh: number;
-  refreshUnits: 'seconds' | 'minutes' | 'hours' | 'days';
   kalendarEvents?: KalenderEvents;
   events: IKalenderEvent[];
   _interval?: NodeJS.Timer;
@@ -39,11 +35,7 @@ module.exports = function (RED: any) {
 
     node.events = [];
     node._onUpdateCallbacks = [];
-    node.url = config.url;
     node.name = config.name;
-    node.usecache = config.usecache;
-    node.refresh = parseInt(config.refresh);
-    node.refreshUnits = config.refreshUnits;
 
     if (!config.type) {
       if (!config.caldav || config.caldav === 'false')
@@ -57,18 +49,18 @@ module.exports = function (RED: any) {
     }
 
     let seconds = 1;
-    switch (node.refreshUnits) {
+    switch (node.calConfigNodeConfig.refreshUnits) {
       case 'seconds':
-        seconds = node.refresh;
+        seconds = node.calConfigNodeConfig.refresh;
         break;
       case 'minutes':
-        seconds = node.refresh * 60;
+        seconds = node.calConfigNodeConfig.refresh * 60;
         break;
       case 'hours':
-        seconds = node.refresh * 60 * 60;
+        seconds = node.calConfigNodeConfig.refresh * 60 * 60;
         break;
       case 'days':
-        seconds = node.refresh * 60 * 60 * 24;
+        seconds = node.calConfigNodeConfig.refresh * 60 * 60 * 24;
         break;
     }
 
@@ -100,7 +92,7 @@ module.exports = function (RED: any) {
       const eventData = await node.kalendarEvents.getEvents(node.calConfigNodeConfig);
       events = eventData.map(event => extendEvent(event, node.calConfigNodeConfig, node.kalendarEvents));
 
-      if (node.usecache) {
+      if (node.calConfigNodeConfig.usecache) {
         if (!node.cache) {
           node.cache = new NodeCache();
         }
@@ -108,7 +100,7 @@ module.exports = function (RED: any) {
       }
 
     } catch (err) {
-      if (node.usecache && node.cache) {
+      if (node.calConfigNodeConfig.usecache && node.cache) {
         events = node.cache.get('eventData');
       }
     }
