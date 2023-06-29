@@ -1,6 +1,6 @@
-import { NodeMessage, NodeMessageInFlow, NodeStatusShape } from 'node-red';
-import { CalSensorNode, CalNodeConfig, inTheFuture, inThePast } from './node-common';
-import { CalConfigNode } from './cal-config';
+import {NodeMessage, NodeMessageInFlow, NodeStatusShape} from 'node-red';
+import {CalSensorNode, CalNodeConfig, inTheFuture, inThePast} from './node-common';
+import {CalConfigNode} from './cal-config';
 
 module.exports = function (RED: any) {
   function calSensorNode(config: CalNodeConfig) {
@@ -10,15 +10,26 @@ module.exports = function (RED: any) {
     node.config = config;
 
     try {
-      const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
 
       node.on('input', (msg, send, done) => {
-        send = send || function () { node.send.apply(node, arguments); };
+        send = send || function () {
+          node.send.apply(node, arguments);
+        };
+
+
+        const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
+        if (!calConfigNode) {
+          node.status({fill: 'red', shape: 'ring', text: `Missing configuration node`});
+          return;
+        }
+
+        node.status({fill: 'grey', shape: 'ring', text: `Working...`});
+
         onInput(node, msg, send, done, calConfigNode);
       });
     } catch (err) {
       node.error('Error: ' + err.message);
-      node.status({ fill: 'red', shape: 'ring', text: err.message });
+      node.status({fill: 'red', shape: 'ring', text: err.message});
     }
   }
 
@@ -41,16 +52,19 @@ module.exports = function (RED: any) {
         return true;
       });
 
-      send({ payload: { inEvent } });
-      node.status({ fill: 'green', shape, text: `processed ${calConfigNode.events.length} events, in event: ${inEvent}` });
+      send({payload: {inEvent}});
+      node.status({
+        fill: 'green',
+        shape,
+        text: `processed ${calConfigNode.events.length} events, in event: ${inEvent}`
+      });
 
       if (done) {
         done();
       }
     };
 
-    const payload = msg.payload as any;
-    if (payload && (typeof payload === 'object') && payload.hasOwnProperty('forceCalendarUpdate') && payload.forceCalendarUpdate) {
+    if (msg && 'forceCalendarUpdate' in msg && (typeof msg.forceCalendarUpdate === 'boolean') && msg.forceCalendarUpdate) {
       shape = 'dot';
       calConfigNode.updateCalendar().then(calculateStatus);
     } else {
