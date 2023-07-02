@@ -3,9 +3,9 @@ import {
   CalNodeConfig,
   inTheFuture,
   inThePast,
-  CalSensorNode
 } from './node-common';
 import { CalConfigNode } from './cal-config';
+import { icalCalendar } from 'basic-ical-events';
 
 module.exports = function (RED: any) {
   function calTriggerNode(config: CalNodeConfig) {
@@ -39,11 +39,9 @@ module.exports = function (RED: any) {
 
   const sendStatus = (node: CalTriggerNode, calConfigNode: CalConfigNode) => {
     const calculateStatus = () => {
-      const ke = calConfigNode.kalendarEvents;
-
       const inEvent = !calConfigNode.events.every(event => {
-        const start = ke.countdown(event.eventStart);
-        const end = ke.countdown(event.eventEnd);
+        const start = icalCalendar.countdown(event.eventStart);
+        const end = icalCalendar.countdown(event.eventEnd);
 
         return !(inThePast(start) && inTheFuture(end));
       });
@@ -66,7 +64,6 @@ module.exports = function (RED: any) {
 
   const scheduleNextEvent = (node: CalTriggerNode) => {
     const calConfigNode: CalConfigNode = RED.nodes.getNode(node.config.confignode);
-    const ke = calConfigNode.kalendarEvents;
 
     const schedule = (date: Date) => {
       const now = Date.now();
@@ -88,8 +85,8 @@ module.exports = function (RED: any) {
 
     // it's a hack using `every` to run until false
     const didSchedule = !calConfigNode.events.every(event => {
-      const start = ke.countdown(event.eventStart);
-      const end = ke.countdown(event.eventEnd);
+      const start = icalCalendar.countdown(event.eventStart);
+      const end = icalCalendar.countdown(event.eventEnd);
 
       // if the event is ended, skip it
       if (inThePast(end)) {
@@ -104,6 +101,7 @@ module.exports = function (RED: any) {
 
       // if the event is in the future, the next check is at the start
       if (inTheFuture(start)) {
+        console.log(`Scheduling ${event.summary} at ${event.eventStart} in`, start);
         schedule(event.eventStart);
         return false;
       }
@@ -121,7 +119,13 @@ module.exports = function (RED: any) {
 
 
 const getNextCheckTimeString = (node: CalTriggerNode) => {
-  const options: Intl.DateTimeFormatOptions = { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
   const dateString = node._nextCheckTime.toLocaleDateString(undefined, options);
 
   const seconds = Math.floor((node._nextCheckTime.getTime() - new Date().getTime()) / 1000);

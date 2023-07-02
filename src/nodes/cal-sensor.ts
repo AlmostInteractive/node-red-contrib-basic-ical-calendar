@@ -1,6 +1,7 @@
 import {NodeMessage, NodeMessageInFlow, NodeStatusShape} from 'node-red';
 import {CalSensorNode, CalNodeConfig, inTheFuture, inThePast} from './node-common';
 import {CalConfigNode} from './cal-config';
+import { icalCalendar } from 'basic-ical-events';
 
 module.exports = function (RED: any) {
   function calSensorNode(config: CalNodeConfig) {
@@ -38,11 +39,10 @@ module.exports = function (RED: any) {
 
     const calculateStatus = () => {
       let inEvent = false;
-      const ke = calConfigNode.kalendarEvents;
 
       calConfigNode.events.every(event => {
-        const start = ke.countdown(event.eventStart);
-        const end = ke.countdown(event.eventEnd);
+        const start = icalCalendar.countdown(event.eventStart);
+        const end = icalCalendar.countdown(event.eventEnd);
 
         if (inThePast(start) && inTheFuture(end)) {
           inEvent = true;

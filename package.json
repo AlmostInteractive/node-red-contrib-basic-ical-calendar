@@ -23,7 +23,6 @@
     "events",
     "google",
     "outlook",
-    "kalender",
     "nodered",
     "ics",
     "smart home",
@@ -49,8 +48,8 @@
     "package": "npm pack"
   },
   "dependencies": {
+    "basic-ical-events": "^1.0.0",
     "dotenv": "^16.3.1",
-    "kalender-events": "0.28.1",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
