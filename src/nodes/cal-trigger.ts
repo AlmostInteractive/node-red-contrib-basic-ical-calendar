@@ -20,6 +20,10 @@ module.exports = function (RED: any) {
 
     try {
       const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
+      if (!calConfigNode) {
+        node.status({ fill: 'red', shape: 'ring', text: 'Missing configuration node' });
+        return;
+      }
 
       node.on('close', (removed, done) => {
         calConfigNode.removeUpdateListener(node);
@@ -68,19 +72,19 @@ module.exports = function (RED: any) {
     const schedule = (date: Date) => {
       const now = Date.now();
       const time = date.getTime();
-      const ms = time - now + 500; // a buffer to make sure we're on the other side of the threshold
+      const executeIn = Math.min(86400 * 1000, time - now) + 500; // max of one day plus a buffer to make sure we're on the other side of the threshold
 
       if (node.timeout) {
         clearTimeout(node.timeout);
       }
 
-      node._nextCheckTime = date;
+      node._nextCheckTime = new Date(now + executeIn);
       node.status({ fill: 'blue', shape: 'dot', text: `${getNextCheckTimeString(node)}` });
 
       node.timeout = setTimeout(() => {
         sendStatus(node, calConfigNode);
         scheduleNextEvent(node);
-      }, ms);
+      }, executeIn);
     };
 
     // it's a hack using `every` to run until false
@@ -101,7 +105,6 @@ module.exports = function (RED: any) {
 
       // if the event is in the future, the next check is at the start
       if (inTheFuture(start)) {
-        console.log(`Scheduling ${event.summary} at ${event.eventStart} in`, start);
         schedule(event.eventStart);
         return false;
       }
