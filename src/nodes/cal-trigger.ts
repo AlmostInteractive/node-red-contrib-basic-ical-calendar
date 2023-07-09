@@ -105,6 +105,7 @@ module.exports = function (RED: any) {
 
       // if the event is in the future, the next check is at the start
       if (inTheFuture(start)) {
+        // console.log(`Scheduling ${event.summary} at ${event.eventStart} in`, start);
         schedule(event.eventStart);
         return false;
       }
@@ -113,7 +114,8 @@ module.exports = function (RED: any) {
     });
 
     if (!didSchedule) {
-      node.status({ fill: 'blue', shape: 'ring', text: `No events found` });
+      const oneDay = new Date(Date.now() + (86400 * 1000));
+      schedule(oneDay);
     }
   };
 
