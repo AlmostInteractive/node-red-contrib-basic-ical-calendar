@@ -10,13 +10,17 @@ module.exports = function (RED: any) {
 
     node.config = config;
 
-    try {
+    const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
+    if (!calConfigNode) {
+      node.status({fill: 'red', shape: 'ring', text: `Missing configuration node`});
+      return;
+    }
 
+    try {
       node.on('input', (msg, send, done) => {
         send = send || function () {
           node.send.apply(node, arguments);
         };
-
 
         const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
         if (!calConfigNode) {
