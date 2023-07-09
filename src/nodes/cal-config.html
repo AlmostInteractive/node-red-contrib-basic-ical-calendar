@@ -1,35 +1,39 @@
 <script type="text/javascript">
-  RED.nodes.registerType('cal-config', {
-    category: 'config',
-    defaults: {
-      name: {
-        value: '',
-      },
-      url: {
-        value: '',
-      },
-      refresh: {
-        value: 1,
-      },
-      refreshUnits: {
-        value: 'days',
-      },
-      usecache: {
-        value: true,
-      },
-    },
-    paletteLabel: 'config',
-    label: function () {
-      return this.name || 'Calendar Config';
-    },
-    oneditprepare: function () {},
-    oneditsave: function() {
-      const num = parseInt($("#node-config-input-refresh").val().toString());
-      if (isNaN(num) || num <= 1) {
-        $("#node-config-input-refresh").val(1);
-      }
-    },
-  });
+    RED.nodes.registerType('cal-config', {
+        category: 'config',
+        defaults: {
+            name: {
+                value: '',
+            },
+            url: {
+                value: '',
+            },
+            refresh: {
+                value: 1,
+            },
+            refreshUnits: {
+                value: 'days',
+            },
+        },
+        paletteLabel: 'config',
+        label: function () {
+            return this.name || 'Calendar Config';
+        },
+        oneditprepare: function () {
+        },
+        oneditsave: function () {
+            let num = parseInt($("#node-config-input-refresh").val().toString());
+            if (isNaN(num) || num <= 1) {
+                num = 1;
+                $("#node-config-input-refresh").val(1);
+            }
+            if ($("#node-config-input-refreshUnits").val() === 'days') {
+                if (num > 2) {
+                    $("#node-config-input-refresh").val(2);
+                }
+            }
+        },
+    });
 </script>
 
 <script type="text/html" data-template-name="cal-config">
@@ -95,20 +99,14 @@
             <i class="fa fa-clock-o"></i>
             <span>Refresh file every:</span>
         </label>
-        <input type="number" id="node-config-input-refresh" style="text-align:end; width:50px !important" placeholder="0">
+        <input type="number" id="node-config-input-refresh" style="text-align:end; width:50px !important"
+               placeholder="0">
         <select id="node-config-input-refreshUnits" style="width:200px !important">
             <option value="seconds">Seconds</option>
             <option value="minutes">Minutes</option>
             <option value="hours">Hours</option>
             <option value="days">Days</option>
         </select>
-    </div>
-    <div class="form-row event">
-        <label for="node-config-input-usecache" style="width:160px !important">
-            <i class="fa fa-asterisk"></i>
-            <span>Use cache in case of an error:</span>
-        </label>
-        <input type="checkbox" id="node-config-input-usecache" placeholder="" style="width:16px !important">
     </div>
 </script>
 
