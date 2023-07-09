@@ -48,7 +48,7 @@
     "package": "npm pack"
   },
   "dependencies": {
-    "basic-ical-events": "^1.0.0",
+    "basic-ical-events": "^1.0.2",
     "dotenv": "^16.3.1",
     "node-cache": "^5.1.2"
   },
