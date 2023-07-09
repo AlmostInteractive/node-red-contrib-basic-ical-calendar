@@ -1,13 +1,17 @@
 import { Node } from 'node-red';
 import * as NodeCache from 'node-cache';
-import { CalendarConfig, CalendarEvent, icalCalendar } from 'basic-ical-events';
+import { CalendarConfig, CalendarEvent, EventsFilter, icalCalendar, ViewWindow } from 'basic-ical-events';
+import { ViewWindowParams } from 'basic-ical-events/src/interfaces';
 
-type Countdown = { days: number, hours: number, minutes: number, seconds: number };
 
 export interface CalConfigNodeConfig extends CalendarConfig {
   name: string;
-  refresh?: number;
+  refresh?: string;
   refreshUnits?: 'seconds' | 'minutes' | 'hours' | 'days';
+  pastViewWindowAmount?: string;
+  pastViewWindowUnits?: 'hours' | 'days';
+  futureViewWindowAmount?: string;
+  futureViewWindowUnits?: 'hours' | 'days';
 }
 
 export interface OnUpdateHandler {
@@ -36,23 +40,24 @@ module.exports = function (RED: any) {
     node._onUpdateCallbacks = [];
     node.name = config.name;
 
-    let seconds = 1;
+    let  updateIntervalSeconds = 1;
+    const refresh = Math.max(1, parseInt(node.calConfigNodeConfig.refresh));
     switch (node.calConfigNodeConfig.refreshUnits) {
       case 'seconds':
-        seconds = node.calConfigNodeConfig.refresh;
+        updateIntervalSeconds = refresh;
         break;
       case 'minutes':
-        seconds = node.calConfigNodeConfig.refresh * 60;
+        updateIntervalSeconds = refresh * 60;
         break;
       case 'hours':
-        seconds = node.calConfigNodeConfig.refresh * 60 * 60;
+        updateIntervalSeconds = refresh * 60 * 60;
         break;
       case 'days':
-        seconds = node.calConfigNodeConfig.refresh * 60 * 60 * 24;
+        updateIntervalSeconds = refresh * 60 * 60 * 24;
         break;
     }
-
-    node._interval = setInterval(() => updateCalendar(node), seconds * 1000);
+    updateIntervalSeconds = Math.min(2 * 86400, updateIntervalSeconds); // max two days
+    node._interval = setInterval(() => updateCalendar(node), updateIntervalSeconds * 1000);
 
     node.on('close', () => {
       clearInterval(node._interval);
@@ -77,8 +82,19 @@ module.exports = function (RED: any) {
 
     await node.calendar.updateCalendar();
 
-    const events = await node.calendar.getEvents();
-    events.sort((a, b) => a < b ? -1 : 1);
+    const filter: EventsFilter = {
+      pastViewWindow: {
+        amount: 3,
+        units: 'days'
+      },
+      futureViewWindow: {
+        amount: 3,
+        units: 'days'
+      },
+    };
+
+    const events = await node.calendar.getEvents(filter);
+    events.sort((a, b) => a.eventStart < b.eventStart ? -1 : 1);
     node.events = events;
 
     node._onUpdateCallbacks.forEach(callback => {
