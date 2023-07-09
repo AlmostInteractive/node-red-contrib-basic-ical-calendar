@@ -86,11 +86,6 @@ module.exports = function (RED: any) {
     });
   };
 
-  RED.nodes.registerType('cal-config', calConfigNode, {
-    credentials: {
-      pass: { type: 'password' },
-      user: { type: 'text' },
-    },
-  });
+  RED.nodes.registerType('cal-config', calConfigNode);
 };
 
