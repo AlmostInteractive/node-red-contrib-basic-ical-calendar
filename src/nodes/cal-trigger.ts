@@ -1,11 +1,5 @@
-import {
-  CalTriggerNode,
-  CalNodeConfig,
-  inTheFuture,
-  inThePast,
-} from './node-common';
+import { CalTriggerNode, CalNodeConfig, calcInEvent } from './node-common';
 import { CalConfigNode } from './cal-config';
-import { icalCalendar } from 'basic-ical-events';
 
 module.exports = function (RED: any) {
   function calTriggerNode(config: CalNodeConfig) {
@@ -43,12 +37,7 @@ module.exports = function (RED: any) {
 
   const sendStatus = (node: CalTriggerNode, calConfigNode: CalConfigNode) => {
     const calculateStatus = () => {
-      const inEvent = !calConfigNode.events.every(event => {
-        const start = icalCalendar.countdown(event.eventStart);
-        const end = icalCalendar.countdown(event.eventEnd);
-
-        return !(inThePast(start) && inTheFuture(end));
-      });
+      const inEvent = calcInEvent(calConfigNode.events);
 
       if (inEvent) {
         node.send({ payload: { inEvent } });
@@ -70,15 +59,15 @@ module.exports = function (RED: any) {
     const calConfigNode: CalConfigNode = RED.nodes.getNode(node.config.confignode);
 
     const schedule = (date: Date) => {
-      const now = Date.now();
+      const nowMs = Date.now();
       const time = date.getTime();
-      const executeIn = Math.min(86400 * 1000, time - now) + 500; // max of one day plus a buffer to make sure we're on the other side of the threshold
+      const executeIn = Math.min(86400 * 1000, time - nowMs) + 500; // max of one day plus a buffer to make sure we're on the other side of the threshold
 
       if (node.timeout) {
         clearTimeout(node.timeout);
       }
 
-      node._nextCheckTime = new Date(now + executeIn);
+      node._nextCheckTime = new Date(nowMs + executeIn);
       node.status({ fill: 'blue', shape: 'dot', text: `${getNextCheckTimeString(node)}` });
 
       node.timeout = setTimeout(() => {
@@ -88,23 +77,24 @@ module.exports = function (RED: any) {
     };
 
     // it's a hack using `every` to run until false
+    const now = new Date();
     const didSchedule = !calConfigNode.events.every(event => {
-      const start = icalCalendar.countdown(event.eventStart);
-      const end = icalCalendar.countdown(event.eventEnd);
+      const start = event.eventStart;
+      const end = event.eventEnd;
 
       // if the event is ended, skip it
-      if (inThePast(end)) {
+      if (end < now) {
         return true;
       }
 
       // if we're in an event, the next check is at the end
-      if (inThePast(start) && inTheFuture(end)) {
+      if (start <= now && now < end) {
         schedule(event.eventEnd);
         return false;
       }
 
       // if the event is in the future, the next check is at the start
-      if (inTheFuture(start)) {
+      if (now < start) {
         // console.log(`Scheduling ${event.summary} at ${event.eventStart} in`, start);
         schedule(event.eventStart);
         return false;

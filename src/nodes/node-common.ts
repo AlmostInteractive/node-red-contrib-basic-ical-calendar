@@ -1,7 +1,6 @@
 import { OnUpdateHandler } from './cal-config';
 import { Node, NodeDef } from 'node-red';
-
-export type Countdown = { days: number, hours: number, minutes: number, seconds: number };
+import { CalendarEvent } from 'basic-ical-events';
 
 export interface Job {
   id: string,
@@ -25,40 +24,13 @@ export interface CalTriggerNode extends Node, OnUpdateHandler {
   _nextCheckTime?: Date;
 }
 
-export const inThePast = (countdown: Countdown) => {
-  if (countdown.days < 0)
-    return true;
-  if (countdown.days > 0)
-    return false;
+export const calcInEvent = (events: CalendarEvent[]) => {
+  const now = new Date();
+  return !events.every(event => {
+    const start = event.eventStart;
+    const end = event.eventEnd;
 
-  if (countdown.hours < 0)
-    return true;
-  if (countdown.hours > 0)
-    return false;
-
-  if (countdown.minutes < 0)
-    return true;
-  if (countdown.minutes > 0)
-    return false;
-
-  return (countdown.seconds < 0);
-};
-
-export const inTheFuture = (countdown: Countdown) => {
-  if (countdown.days < 0)
-    return false;
-  if (countdown.days > 0)
-    return true;
-
-  if (countdown.hours < 0)
-    return false;
-  if (countdown.hours > 0)
-    return true;
-
-  if (countdown.minutes < 0)
-    return false;
-  if (countdown.minutes > 0)
-    return true;
-
-  return (countdown.seconds > 0);
-};
+    // the event has ended or hasn't yet started
+    return (end <= now || now < start);
+  });
+}

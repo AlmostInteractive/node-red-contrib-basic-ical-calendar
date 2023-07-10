@@ -1,6 +1,6 @@
-import {NodeMessage, NodeMessageInFlow, NodeStatusShape} from 'node-red';
-import {CalSensorNode, CalNodeConfig, inTheFuture, inThePast} from './node-common';
-import {CalConfigNode} from './cal-config';
+import { NodeMessage, NodeMessageInFlow, NodeStatusShape } from 'node-red';
+import { CalSensorNode, CalNodeConfig, calcInEvent } from './node-common';
+import { CalConfigNode } from './cal-config';
 import { icalCalendar } from 'basic-ical-events';
 
 module.exports = function (RED: any) {
@@ -12,7 +12,7 @@ module.exports = function (RED: any) {
 
     const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
     if (!calConfigNode) {
-      node.status({fill: 'red', shape: 'ring', text: `Missing configuration node`});
+      node.status({ fill: 'red', shape: 'ring', text: `Missing configuration node` });
       return;
     }
 
@@ -24,17 +24,17 @@ module.exports = function (RED: any) {
 
         const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
         if (!calConfigNode) {
-          node.status({fill: 'red', shape: 'ring', text: `Missing configuration node`});
+          node.status({ fill: 'red', shape: 'ring', text: `Missing configuration node` });
           return;
         }
 
-        node.status({fill: 'grey', shape: 'ring', text: `Working...`});
+        node.status({ fill: 'grey', shape: 'ring', text: `Working...` });
 
         onInput(node, msg, send, done, calConfigNode);
       });
     } catch (err) {
       node.error('Error: ' + err.message);
-      node.status({fill: 'red', shape: 'ring', text: err.message});
+      node.status({ fill: 'red', shape: 'ring', text: err.message });
     }
   }
 
@@ -42,25 +42,13 @@ module.exports = function (RED: any) {
     let shape: NodeStatusShape = 'ring';
 
     const calculateStatus = () => {
-      let inEvent = false;
+      const inEvent = calcInEvent(calConfigNode.events);
 
-      calConfigNode.events.every(event => {
-        const start = icalCalendar.countdown(event.eventStart);
-        const end = icalCalendar.countdown(event.eventEnd);
-
-        if (inThePast(start) && inTheFuture(end)) {
-          inEvent = true;
-          return false;
-        }
-
-        return true;
-      });
-
-      send({payload: {inEvent}});
+      send({ payload: { inEvent } });
       node.status({
         fill: 'green',
         shape,
-        text: `processed ${calConfigNode.events.length} events, in event: ${inEvent}`
+        text: `processed ${calConfigNode.events.length} events, in event: ${inEvent}`,
       });
 
       if (done) {
