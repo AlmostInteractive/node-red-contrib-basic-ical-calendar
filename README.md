@@ -9,7 +9,7 @@ Configuration node.  It can automatically refresh itself periodically and in the
 
 ### calendar/cal-sensor
 On trigger, outputs true if the calendar is currently in an event, otherwise false.  Only outputs on trigger.  Output format:
-`{ inEvent: boolean }`
+`{ inEvent: boolean, events: CalendarEvent[] }` where `events` are the events that are currently in progress (so that'll be an empty array when `inEvent` is false. 
 If the triggering message includes `forceCalendarUpdate: true` then the calendar will be re-fetched before querying.
 
 ### calendar/cal-trigger

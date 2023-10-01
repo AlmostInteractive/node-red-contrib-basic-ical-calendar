@@ -1,5 +1,5 @@
 import { NodeMessage, NodeMessageInFlow, NodeStatusShape } from 'node-red';
-import { CalSensorNode, CalNodeConfig, calcInEvent } from './node-common';
+import { CalSensorNode, CalNodeConfig, calcInEvent, getCurrentEvents } from './node-common';
 import { CalConfigNode } from './cal-config';
 import { icalCalendar } from 'basic-ical-events';
 
@@ -42,9 +42,10 @@ module.exports = function (RED: any) {
     let shape: NodeStatusShape = 'ring';
 
     const calculateStatus = () => {
-      const inEvent = calcInEvent(calConfigNode.events);
+      const inEvents = getCurrentEvents(calConfigNode.events);
+      const inEvent = inEvents.length > 0;
 
-      send({ payload: { inEvent } });
+      send({ payload: { inEvent, events: inEvents } });
       node.status({
         fill: 'green',
         shape,
