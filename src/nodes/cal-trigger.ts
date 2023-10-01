@@ -36,23 +36,20 @@ module.exports = function (RED: any) {
   }
 
   const sendStatus = (node: CalTriggerNode, calConfigNode: CalConfigNode) => {
-    const calculateStatus = () => {
-      const inEvent = calcInEvent(calConfigNode.events);
+    const inEvent = calcInEvent(calConfigNode.events);
 
-      if (inEvent) {
-        node.send({ payload: { inEvent } });
-      } else {
-        node.send([null, { payload: { inEvent } }]);
-      }
+    if (inEvent) {
+      node.send({ payload: { inEvent } });
+    } else {
+      node.send([null, { payload: { inEvent } }]);
+    }
 
-      node.status({
-        fill: 'green',
-        shape: 'ring',
-        text: `${calConfigNode.events.length} events, in event ${inEvent}, ${getNextCheckTimeString(node)}`,
-      });
-    };
+    node.status({
+      fill: 'green',
+      shape: 'ring',
+      text: `${calConfigNode.events.length} events, in event ${inEvent}, ${getNextCheckTimeString(node)}`,
+    });
 
-    calculateStatus();
   };
 
   const scheduleNextEvent = (node: CalTriggerNode) => {
