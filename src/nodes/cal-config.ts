@@ -40,7 +40,7 @@ module.exports = function (RED: any) {
     node._onUpdateCallbacks = [];
     node.name = config.name;
 
-    let  updateIntervalSeconds = 1;
+    let updateIntervalSeconds = 1;
     const refresh = Math.max(1, parseInt(node.calConfigNodeConfig.refresh));
     switch (node.calConfigNodeConfig.refreshUnits) {
       case 'seconds':
