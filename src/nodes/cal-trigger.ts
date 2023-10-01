@@ -49,7 +49,6 @@ module.exports = function (RED: any) {
       shape: 'ring',
       text: `${calConfigNode.events.length} events, in event ${inEvent}, ${getNextCheckTimeString(node)}`,
     });
-
   };
 
   const scheduleNextEvent = (node: CalTriggerNode) => {
@@ -58,7 +57,9 @@ module.exports = function (RED: any) {
     const schedule = (date: Date) => {
       const nowMs = Date.now();
       const time = date.getTime();
-      const executeIn = Math.min(86400 * 1000, time - nowMs) + 500; // max of one day plus a buffer to make sure we're on the other side of the threshold
+      const oneDay = 86400 * 1000;
+      const executeIn = time - nowMs + 500; // plus a buffer to make sure we're on the other side of the threshold
+      const shouldSendStatus = executeIn < oneDay;
 
       if (node.timeout) {
         clearTimeout(node.timeout);
@@ -68,9 +69,11 @@ module.exports = function (RED: any) {
       node.status({ fill: 'blue', shape: 'dot', text: `${getNextCheckTimeString(node)}` });
 
       node.timeout = setTimeout(() => {
-        sendStatus(node, calConfigNode);
+        if (shouldSendStatus) {
+          sendStatus(node, calConfigNode);
+        }
         scheduleNextEvent(node);
-      }, executeIn);
+      }, Math.min(executeIn, oneDay));  // max of one day
     };
 
     // it's a hack using `every` to run until false
