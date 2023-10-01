@@ -1,7 +1,6 @@
 import { NodeMessage, NodeMessageInFlow, NodeStatusShape } from 'node-red';
-import { CalSensorNode, CalNodeConfig, calcInEvent, getCurrentEvents } from './node-common';
+import { CalSensorNode, CalNodeConfig, getCurrentEvents } from './node-common';
 import { CalConfigNode } from './cal-config';
-import { icalCalendar } from 'basic-ical-events';
 
 module.exports = function (RED: any) {
   function calSensorNode(config: CalNodeConfig) {
