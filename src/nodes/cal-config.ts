@@ -1,7 +1,6 @@
 import { Node } from 'node-red';
 import * as NodeCache from 'node-cache';
-import { CalendarConfig, CalendarEvent, EventsFilter, icalCalendar, ViewWindow } from 'basic-ical-events';
-import { ViewWindowParams } from 'basic-ical-events/src/interfaces';
+import { CalendarConfig, CalendarEvent, EventsFilter, icalCalendar } from 'basic-ical-events';
 
 
 export interface CalConfigNodeConfig extends CalendarConfig {
@@ -80,26 +79,30 @@ module.exports = function (RED: any) {
       node.calendar = new icalCalendar(node.calConfigNodeConfig);
     }
 
-    await node.calendar.updateCalendar();
+    try {
+      await node.calendar.updateCalendar();
 
-    const filter: EventsFilter = {
-      pastViewWindow: {
-        amount: 3,
-        units: 'days'
-      },
-      futureViewWindow: {
-        amount: 3,
-        units: 'days'
-      },
-    };
+      const filter: EventsFilter = {
+        pastViewWindow: {
+          amount: 3,
+          units: 'days',
+        },
+        futureViewWindow: {
+          amount: 3,
+          units: 'days',
+        },
+      };
 
-    const events = await node.calendar.getEvents(filter);
-    events.sort((a, b) => a.eventStart < b.eventStart ? -1 : 1);
-    node.events = events;
+      const events = await node.calendar.getEvents(filter);
+      events.sort((a, b) => a.eventStart < b.eventStart ? -1 : 1);
+      node.events = events;
 
-    node._onUpdateCallbacks.forEach(callback => {
-      callback.onCalNodeConfigUpdate();
-    });
+      node._onUpdateCallbacks.forEach(callback => {
+        callback.onCalNodeConfigUpdate();
+      });
+    } catch (error) {
+      node.error(`updateCalendar error: ${error.message}`);
+    }
   };
 
   RED.nodes.registerType('cal-config', calConfigNode);
