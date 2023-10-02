@@ -42,6 +42,6 @@ export const getCurrentEvents = (events: CalendarEvent[]) => {
     const end = event.eventEnd;
 
     // the event has started and hasn't ended
-    return (now <= start && now < end);
+    return (start <= now && now < end);
   });
 }
