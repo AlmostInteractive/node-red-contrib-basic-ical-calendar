@@ -18,9 +18,14 @@ export interface CalSensorNode extends Node, OnUpdateHandler {
   config: CalNodeConfig;
 }
 
+type EventTimeoutPair = {
+  start: NodeJS.Timeout;
+  end: NodeJS.Timeout;
+}
 export interface CalTriggerNode extends Node, OnUpdateHandler {
   config: CalNodeConfig;
-  timeout?: NodeJS.Timeout;
+  _scheduleNextEventsTimeout?: NodeJS.Timeout;
+  _eventTimeoutPairs?: Map<CalendarEvent, EventTimeoutPair>;
   _nextCheckTime?: Date;
 }
 

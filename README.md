@@ -13,8 +13,8 @@ On trigger, outputs true if the calendar is currently in an event, otherwise fal
 If the triggering message includes `forceCalendarUpdate: true` then the calendar will be re-fetched before querying.
 
 ### calendar/cal-trigger
-Sends to Output 1 when an event starts.  Sends to Output 2 when an event ends.  Cannot be triggered manually (use the sensor for manual queries). Output format:
-`{ inEvent: boolean }`
+Sends to Output 1 when an event starts.  Sends to Output 2 when an event ends.  Cannot be triggered manually (use the sensor for manual queries).  `inEvent` is true if the event is starting, otherwise false.  `event` is the triggering event. Output format:
+`{ inEvent: boolean, event: CalendarEvent }`
 
 ## Debugging
 See [debugging.md](docs/debugging.md)

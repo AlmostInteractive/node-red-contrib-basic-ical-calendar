@@ -1,5 +1,8 @@
 import { CalTriggerNode, CalNodeConfig, calcInEvent } from './node-common';
 import { CalConfigNode } from './cal-config';
+import { CalendarEvent } from 'basic-ical-events';
+
+const ONE_DAY_MS = 86400 * 1000;
 
 module.exports = function (RED: any) {
   function calTriggerNode(config: CalNodeConfig) {
@@ -8,8 +11,21 @@ module.exports = function (RED: any) {
 
     node.config = config;
     node._nextCheckTime = new Date();
+    node._eventTimeoutPairs = new Map();
+
+    const clearTimeouts = () => {
+      clearTimeout(node._scheduleNextEventsTimeout);
+
+      node._eventTimeoutPairs.forEach(timeoutPair => {
+        clearTimeout(timeoutPair.start);
+        clearTimeout(timeoutPair.end);
+      });
+      node._eventTimeoutPairs = new Map();
+    };
+
     node.onCalNodeConfigUpdate = () => {
-      scheduleNextEvent(node);
+      clearTimeouts();
+      scheduleNextEvents(node);
     };
 
     try {
@@ -21,27 +37,23 @@ module.exports = function (RED: any) {
 
       node.on('close', (removed, done) => {
         calConfigNode.removeUpdateListener(node);
-        if (node.timeout) {
-          clearTimeout(node.timeout);
-        }
+        clearTimeouts();
         done();
       });
 
       calConfigNode.addUpdateListener(node);
-      scheduleNextEvent(node);
+      scheduleNextEvents(node);
     } catch (err) {
       node.error('Error: ' + err.message);
       node.status({ fill: 'red', shape: 'ring', text: err.message });
     }
   }
 
-  const sendStatus = (node: CalTriggerNode, calConfigNode: CalConfigNode) => {
-    const inEvent = calcInEvent(calConfigNode.events);
-
+  const sendStatus = (event: CalendarEvent, inEvent: boolean, node: CalTriggerNode, calConfigNode: CalConfigNode) => {
     if (inEvent) {
-      node.send({ payload: { inEvent } });
+      node.send({ payload: { inEvent, event } });
     } else {
-      node.send([null, { payload: { inEvent } }]);
+      node.send([null, { payload: { inEvent, event } }]);
     }
 
     node.status({
@@ -51,62 +63,79 @@ module.exports = function (RED: any) {
     });
   };
 
-  const scheduleNextEvent = (node: CalTriggerNode) => {
+  const scheduleNextEvents = (node: CalTriggerNode) => {
     const calConfigNode: CalConfigNode = RED.nodes.getNode(node.config.confignode);
 
-    const schedule = (date: Date) => {
+    const schedule = (event: CalendarEvent, starting: boolean, date: Date) => {
+      const now = new Date();
       const nowMs = Date.now();
       const time = date.getTime();
-      const oneDay = 86400 * 1000;
-      const executeIn = time - nowMs + 500; // plus a buffer to make sure we're on the other side of the threshold
-      const shouldSendStatus = executeIn < oneDay;
+      const executeIn = time - nowMs + 250; // plus a buffer to make sure we're on the other side of the threshold
+      const timeoutPair = node._eventTimeoutPairs.get(event) || { start: null, end: null };
 
-      if (node.timeout) {
-        clearTimeout(node.timeout);
+      // clear any existing timeout
+      if (starting) {
+        clearTimeout(timeoutPair.start);
+      } else {
+        clearTimeout(timeoutPair.end);
       }
 
-      node._nextCheckTime = new Date(nowMs + executeIn);
-      node.status({ fill: 'blue', shape: 'dot', text: `${getNextCheckTimeString(node)}` });
+      // only schedule if it'll execute within a day
+      if (executeIn > ONE_DAY_MS) {
+        node.error(`Attempting to schedule further out than one day: ${event.summary}`);
+        return false;
+      }
 
-      node.timeout = setTimeout(() => {
-        if (shouldSendStatus) {
-          sendStatus(node, calConfigNode);
+      // set _nextCheckTime to the date if _nct is in the past, or the earliest of the date or _nct if otherwise
+      if (node._nextCheckTime < now) {
+        if (date < node._nextCheckTime) {
+          node._nextCheckTime = date;
+          node.status({ fill: 'blue', shape: 'dot', text: `${getNextCheckTimeString(node)}` });
         }
-        scheduleNextEvent(node);
-      }, Math.min(executeIn, oneDay));  // max of one day
+      }
+
+      const timeout = setTimeout(() => {
+        sendStatus(event, starting, node, calConfigNode);
+        // cleanup the map when the event ends
+        if (!starting) {
+          node._eventTimeoutPairs.delete(event);
+        }
+      }, executeIn);
+
+      if (starting) {
+        timeoutPair.start = timeout;
+      } else {
+        timeoutPair.end = timeout;
+      }
+      node._eventTimeoutPairs.set(event, timeoutPair);
+
+      return true;
     };
 
-    // it's a hack using `every` to run until false
     const now = new Date();
-    const didSchedule = !calConfigNode.events.every(event => {
+    const inOneDay = new Date(Date.now() + ONE_DAY_MS);
+
+    // schedule each event upcoming in the next day
+    calConfigNode.events.forEach(event => {
       const start = event.eventStart;
       const end = event.eventEnd;
 
-      // if the event is ended, skip it
-      if (end < now) {
-        return true;
+      // if the event is ended or won't start within a day, skip it
+      if (end < now || inOneDay < start) {
+        return;
       }
 
-      // if we're in an event, the next check is at the end
-      if (start <= now && now < end) {
-        schedule(event.eventEnd);
-        return false;
-      }
+      schedule(event, true, event.eventStart);
 
-      // if the event is in the future, the next check is at the start
-      if (now < start) {
-        // console.log(`Scheduling ${event.summary} at ${event.eventStart} in`, start);
-        schedule(event.eventStart);
-        return false;
+      if (end < inOneDay) {
+        schedule(event, false, event.eventEnd);
       }
-
-      return true;
     });
 
-    if (!didSchedule) {
-      const oneDay = new Date(Date.now() + (86400 * 1000));
-      schedule(oneDay);
-    }
+    clearTimeout(node._scheduleNextEventsTimeout);
+    node._scheduleNextEventsTimeout = setTimeout(() => {
+      scheduleNextEvents(node);
+    }, ONE_DAY_MS / 2);
   };
 
   RED.nodes.registerType('cal-trigger', calTriggerNode);
