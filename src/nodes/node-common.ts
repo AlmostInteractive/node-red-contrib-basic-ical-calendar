@@ -26,7 +26,6 @@ export interface CalTriggerNode extends Node, OnUpdateHandler {
   config: CalNodeConfig;
   _scheduleNextEventsTimeout?: NodeJS.Timeout;
   _eventTimeoutPairs?: Map<CalendarEvent, EventTimeoutPair>;
-  _nextCheckTime?: Date;
 }
 
 export const calcInEvent = (events: CalendarEvent[]) => {

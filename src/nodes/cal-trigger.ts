@@ -1,4 +1,4 @@
-import { CalTriggerNode, CalNodeConfig, calcInEvent } from './node-common';
+import { CalTriggerNode, CalNodeConfig } from './node-common';
 import { CalConfigNode } from './cal-config';
 import { CalendarEvent } from 'basic-ical-events';
 
@@ -10,10 +10,9 @@ module.exports = function (RED: any) {
     const node: CalTriggerNode = this;
 
     node.config = config;
-    node._nextCheckTime = new Date();
     node._eventTimeoutPairs = new Map();
 
-    const clearTimeouts = () => {
+    const clearAllTimeouts = () => {
       clearTimeout(node._scheduleNextEventsTimeout);
 
       node._eventTimeoutPairs.forEach(timeoutPair => {
@@ -24,8 +23,15 @@ module.exports = function (RED: any) {
     };
 
     node.onCalNodeConfigUpdate = () => {
-      clearTimeouts();
+      clearAllTimeouts();
       scheduleNextEvents(node);
+
+      const calConfigNode: CalConfigNode = RED.nodes.getNode(config.confignode);
+      node.status({
+        fill: 'green',
+        shape: 'dot',
+        text: `triggering on ${calConfigNode.events.length} events`,
+      });
     };
 
     try {
@@ -37,37 +43,36 @@ module.exports = function (RED: any) {
 
       node.on('close', (removed, done) => {
         calConfigNode.removeUpdateListener(node);
-        clearTimeouts();
+        clearAllTimeouts();
         done();
       });
 
       calConfigNode.addUpdateListener(node);
       scheduleNextEvents(node);
+
+      node.status({
+        fill: 'blue',
+        shape: 'dot',
+        text: `triggering on ${calConfigNode.events.length} events`,
+      });
     } catch (err) {
       node.error('Error: ' + err.message);
       node.status({ fill: 'red', shape: 'ring', text: err.message });
     }
   }
 
-  const sendStatus = (event: CalendarEvent, inEvent: boolean, node: CalTriggerNode, calConfigNode: CalConfigNode) => {
+  const sendNodeOutput = (event: CalendarEvent, inEvent: boolean, node: CalTriggerNode) => {
     if (inEvent) {
       node.send({ payload: { inEvent, event } });
     } else {
       node.send([null, { payload: { inEvent, event } }]);
     }
-
-    node.status({
-      fill: 'green',
-      shape: 'ring',
-      text: `${calConfigNode.events.length} events, in event ${inEvent}, ${getNextCheckTimeString(node)}`,
-    });
   };
 
   const scheduleNextEvents = (node: CalTriggerNode) => {
     const calConfigNode: CalConfigNode = RED.nodes.getNode(node.config.confignode);
 
     const schedule = (event: CalendarEvent, starting: boolean, date: Date) => {
-      const now = new Date();
       const nowMs = Date.now();
       const time = date.getTime();
       const executeIn = time - nowMs + 250; // plus a buffer to make sure we're on the other side of the threshold
@@ -80,22 +85,19 @@ module.exports = function (RED: any) {
         clearTimeout(timeoutPair.end);
       }
 
-      // only schedule if it'll execute within a day
-      if (executeIn > ONE_DAY_MS) {
-        node.error(`Attempting to schedule further out than one day: ${event.summary}`);
+      if (executeIn < 0) {
+        node.error(`Attempting to schedule in the past: ${event.summary} ${starting}`);
         return false;
       }
 
-      // set _nextCheckTime to the date if _nct is in the past, or the earliest of the date or _nct if otherwise
-      if (node._nextCheckTime < now) {
-        if (date < node._nextCheckTime) {
-          node._nextCheckTime = date;
-          node.status({ fill: 'blue', shape: 'dot', text: `${getNextCheckTimeString(node)}` });
-        }
+      // only schedule if it'll execute within a day
+      if (executeIn > ONE_DAY_MS) {
+        node.error(`Attempting to schedule further out than one day: ${event.summary} ${starting}`);
+        return false;
       }
 
       const timeout = setTimeout(() => {
-        sendStatus(event, starting, node, calConfigNode);
+        sendNodeOutput(event, starting, node);
         // cleanup the map when the event ends
         if (!starting) {
           node._eventTimeoutPairs.delete(event);
@@ -125,7 +127,9 @@ module.exports = function (RED: any) {
         return;
       }
 
-      schedule(event, true, event.eventStart);
+      if (now < start) {
+        schedule(event, true, event.eventStart);
+      }
 
       if (end < inOneDay) {
         schedule(event, false, event.eventEnd);
@@ -139,38 +143,4 @@ module.exports = function (RED: any) {
   };
 
   RED.nodes.registerType('cal-trigger', calTriggerNode);
-};
-
-
-const getNextCheckTimeString = (node: CalTriggerNode) => {
-  const options: Intl.DateTimeFormatOptions = {
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  };
-  const dateString = node._nextCheckTime.toLocaleDateString(undefined, options);
-
-  const seconds = Math.floor((node._nextCheckTime.getTime() - new Date().getTime()) / 1000);
-  const d = Math.floor(seconds / (3600 * 24));
-  const h = Math.floor(seconds % (3600 * 24) / 3600);
-  const m = Math.floor(seconds % 3600 / 60);
-  const s = Math.floor(seconds % 60);
-
-  let timeStr = '';
-  if (d > 0) {
-    timeStr += `${d}d `;
-  }
-  if (h > 0) {
-    timeStr += `${h}h `;
-  }
-  if (m > 0) {
-    timeStr += `${m}m `;
-  }
-  if (s > 0) {
-    timeStr += `${s}s`;
-  }
-
-  return `next check at ${dateString} [${timeStr.trim()}]`;
 };
