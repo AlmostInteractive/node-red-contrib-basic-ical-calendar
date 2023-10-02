@@ -41,10 +41,10 @@ module.exports = function (RED: any) {
     let shape: NodeStatusShape = 'ring';
 
     const calculateStatus = () => {
-      const inEvents = getCurrentEvents(calConfigNode.events);
-      const inEvent = inEvents.length > 0;
+      const currentEvents = getCurrentEvents(calConfigNode.events);
+      const inEvent = currentEvents.length > 0;
 
-      send({ payload: { inEvent, events: inEvents } });
+      send({ payload: { inEvent, events: currentEvents } });
       node.status({
         fill: 'green',
         shape,
